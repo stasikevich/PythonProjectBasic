@@ -7,11 +7,7 @@ from tqdm import tqdm
 import json
 from pprint import pprint
 
-# VK_USER_ID = "113177215"
-# VK_USER_ID = '3975644'
-# VK_USER_ID = "5390579"
-# VK_USER_ID = "4669390"
-# VK_USER_TOKEN = '7782c98d4db49493ea1d7b0f88a1a70945d42abefb75fe8b2ae4899b4ec82902ca9866a89c61b8da7f5bc'
+
 
 photo_json = []
 photo_list = []

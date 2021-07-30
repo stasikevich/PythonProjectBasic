@@ -7,12 +7,6 @@ from tqdm import tqdm
 import json
 from pprint import pprint
 
-
-
-photo_json = []
-photo_list = []
-
-
 class VK:
 
     def __init__(self, VK_USER_ID, VK_USER_TOKEN, album_id="wall"):
@@ -20,16 +14,17 @@ class VK:
         self.VK_USER_ID = VK_USER_ID
         self.VK_USER_TOKEN = VK_USER_TOKEN
         self.album_id = album_id
-        photo_json.append(self)
-        photo_list.append(self)
+        self.photo_json = []
+        self.photo_list = []
 
-    def get_photo_data(self, offset="0", count="100"):
+
+    def get_photo_data(self, offset="0", count="5"):
+        #self.offset = offset
         self.count = count
-        self.offset = offset
         api = requests.get('https://api.vk.com/method/photos.get',
                            params={'owner_id': self.VK_USER_ID, 'access_token': self.VK_USER_TOKEN,
                                    'album_id': self.album_id, 'extended': "1", "count": self.count,
-                                   "offset": self.offset, "photo_sizes": '0', 'v': '5.131'})
+                                    "photo_sizes": '0', 'v': '5.131'})
         return json.loads(api.text)
 
     def get_photo(self, photos_folder):
@@ -53,13 +48,13 @@ class VK:
                 photo_big_size = file_url.split("/")[-1]
                 filename = photo_big_size.split("?")[0]
                 new_filename = filename.replace(filename, (format(files['likes']['count']) + ".jpg"))
-                if new_filename in photo_list:
+                if new_filename in self.photo_list:
                     photos.append(new_filename)
                     time.sleep(0.1)
                     api = requests.get(file_url)
                     file_name_orig = new_filename.replace(".jpg", "_" + h_upload_time)
                     photo_data['filename'] = file_name_orig
-                    photo_list.append(file_name_orig)
+                    self.photo_list.append(file_name_orig)
                     with open(os.path.join(photos_folder, "Likes_number_{}.jpg".format(file_name_orig)), "wb") as file:
                         print(file_name_orig)
                         file.write(api.content)
@@ -68,16 +63,16 @@ class VK:
                     time.sleep(0.1)
                     api = requests.get(file_url)
                     photo_data['filename'] = new_filename
-                    photo_list.append(new_filename)
+                    self.photo_list.append(new_filename)
                     with open(os.path.join(photos_folder, "Likes_number_{}".format(new_filename)), "wb") as file:
                         print(new_filename)
                         file.write(api.content)
                         print()
-                photo_json.append(photo_data)
+                self.photo_json.append(photo_data)
 
             index += count
         pprint(len(photos))
-        pprint(photo_json)
+        pprint(self.photo_json)
 
 
 class YandexDisk:
@@ -85,8 +80,6 @@ class YandexDisk:
         self.photos_folder = photos_folder
         self.token = token
         self.ya_folder = ya_folder
-        # self.file_path = file_path
-        # self.file = file
 
     def get_headers(self):
         return {'Content-type': 'application/json', 'Authorization': 'OAuth {}'.format(self.token)}
@@ -101,13 +94,10 @@ class YandexDisk:
     def upload(self):
         upload_url = "https://cloud-api.yandex.net/v1/disk/resources/upload"
         headers = self.get_headers()
-        # params = {"path": "vk_image", "overwrite": "true", "templated": "false"}
-        # response_upload = requests.get(upload_url, headers=headers, params=params)
-        # res = response_upload.json().get("href", "")
         index = 0
         arr = os.listdir(self.photos_folder)
         for file in tqdm(arr):
-            params = {"path": f'{self.ya_folder}/'+arr[index], "overwrite": "true", "templated": "false"}
+            params = {"path": f'{self.ya_folder}/' + arr[index], "overwrite": "true", "templated": "false"}
             response_upload = requests.get(upload_url, headers=headers, params=params)
             res = response_upload.json().get("href", "")
             try:
@@ -155,7 +145,6 @@ def menu():
     yandex_token = input(f'what is your yandex token: ')
 
     ya_folder = input(f'Name for folder on Yandex disk:')
-
 
     user1 = VK(VK_USER_ID, VK_USER_TOKEN)
     user1.get_photo(photos_folder)
